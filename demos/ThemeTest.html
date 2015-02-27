@@ -12,6 +12,7 @@
 		<!--Import jQuery before materialize.js-->
 		<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 		<script type="text/javascript" src="../libs/materialize/js/materialize.min.js"></script>
+		<script type="text/javascript" src="../js/MaterializeJS.js"></script>
 	</body>
 
 	<!-- Add nav bar -->
@@ -76,5 +77,11 @@
 		$(document).ready(function() {
 			$('select').material_select();
 		});
+		
+		var c = $(".col:eq(2)");
+		c.addButton({text: "Red",   classes: "red   waves-effect"});
+		c.addButton({text: "White", classes: "white black-text waves-effect"});
+		c.addButton({text: "Blue",  classes: "blue  darken-2 waves-effect"});
+		c.addButton({text: "Black", classes: "black waves-effect waves-light"});
 	</script>
 </html>
