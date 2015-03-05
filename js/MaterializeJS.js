@@ -36,14 +36,21 @@ jQuery.fn.addPlainPanelCard = function(info) {
 };
 
 MaterializeJS.imageCardHtml =
-function (id, title, image, info) {
-	var res = "<div id='" + id + "' class='card blue-grey lighten-5 animated fadeInUp waves-effect waves-block waves-light'>\n" + "    <div class='card-image'>\n" + ( image ? "        <img src='" + image + "'><hr style='margin: 0;'>\n" : "") + "    </div>\n" + "    <div class='card-content'>\n" + "        <span class='card-title grey-text text-darken-4'>" + title + "</span>\n" + "        <p>" + info + "</p>\n" + "    </div>\n" +
+function (info) {
+	var res = "<div id='" + info.id + "' class='card blue-grey lighten-5 animated fadeInUp waves-effect waves-block waves-light'>\n" + "    <div class='card-image'>\n" + ( info.image ? "        <img src='" + info.image + "'><hr style='margin: 0;'>\n" : "") + "    </div>\n" + "    <div class='card-content'>\n" + "        <span class='" + info.classes + "'>" + info.title + "</span>\n" + "        <p>" + info.text + "</p>\n" + "    </div>\n" +
 	//"    <div class='card-action'>\n" +
 	//"        <a href='#'>This is a link</a>\n" +
 	//"        <a href='#'>This is a link</a>\n" +
 	//"    </div>\n" +
 	"</div>";
 	return res;
+};
+
+jQuery.fn.addImageCard = function(info) {
+    var o = $(this[0]); // It's your element
+    newElement = $($.parseHTML(MaterializeJS.imageCardHtml(info)));
+    newElement.attr("onclick",_emptyStringIfNull(info.onclick));
+    o.append(newElement);
 };
 
 MaterializeJS.buttonHtml =
