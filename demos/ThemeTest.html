@@ -79,7 +79,7 @@
 		});
 		
 		var c = $(".col:eq(2)");
-		c.addButton({text: "Red",   classes: "red   waves-effect"});
+		c.addButton({text: "onClick",   classes: "red   waves-effect btn-large", onClick: "$('.btn.red').setTranslate2D(40, -40);"});
 		c.addButton({text: "White", classes: "white black-text waves-effect"});
 		c.addButton({text: "Blue",  classes: "blue  darken-2 waves-effect"});
 		c.addButton({text: "Black", classes: "black waves-effect waves-light"});
