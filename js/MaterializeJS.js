@@ -45,8 +45,73 @@ MaterializeJS.revealCardHtml = function(id, title, image, info) {
 	return res;
 };
 
+
+MaterializeJS.makeCardDraggable = function (element){
+  
+  var mc = new Hammer.Manager(element);
+
+  mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
+  mc.add(new Hammer.Swipe()).recognizeWith(mc.get('pan'));
+  
+  mc.on("panstart panmove", MaterializeJS.onCardDrag);
+  mc.on("panend", MaterializeJS.onCardDragEnd);
+}
+
+MaterializeJS.makeCardsDraggable = function (selector){
+  
+  $.each( $(selector), function( i, o ) {
+    MaterializeJS.makeCardDraggable(o);
+  });
+}
+
+// listen to events...
+MaterializeJS.onCardDrag = function (ev) {
+   // Get the events target element
+  var elem = ev.target;
+   
+   // Make sure we work on the card instead of one of its childern
+   if(!$(elem).hasClass(".card-panel")){
+     elem = $(elem).closest(".card-panel")[0];
+   }
+  
+  $(elem).setTranslate2D(ev.deltaX, ev.deltaY);
+  var pos = $(elem)[0].getBoundingClientRect();
+  $("#posSpan").text("X: " + pos.left + " Y: " + pos.top);
+}
+
+MaterializeJS.onCardDragEnd = function (ev) {
+  $("#posSpan").text("");
+  
+   // Get the events target element
+  var elem = ev.target;
+   
+   // Make sure we work on the card instead of one of its childern
+   if(!$(elem).hasClass(".card-panel")){
+     elem = $(elem).closest(".card-panel")[0];
+   }
+  
+  $(elem).velocity(
+    {
+      translateX: ev.deltaX,
+      translateY: ev.deltaY
+    },
+    1).velocity(
+    {
+      translateX: 0,
+      translateY: 0
+    }, 500);
+  
+}
+
 ///////////////////////////////////////////////////////////////////
 // jQuery Plugins /////////////////////////////////////////////////
+
+
+jQuery.fn.makeCardsDraggable = function(info) {
+	$.each( this, function( i, o ) {
+    MaterializeJS.makeCardDraggable(o);
+  });
+};
 
 jQuery.fn.addButton = function(info) {
 	// It's your element
