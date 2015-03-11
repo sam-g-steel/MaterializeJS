@@ -148,8 +148,8 @@ jQuery.fn.setTranslate2D = function(x, y) {
 
 	var value = 'translateX(' + x + 'px) translateY(' + y + 'px)';
 
-	el.style.webkitTransform = value;
-	el.style.mozTransform = value;
+	//el.style.webkitTransform = value;
+	//el.style.mozTransform = value;
 	el.style.transform = value;
 	ticking = false;
 };
