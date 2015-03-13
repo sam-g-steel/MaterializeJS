@@ -12,6 +12,47 @@ function _emptyStringIfNull(obj) {
 var MaterializeJS = {};
 
 
+MaterializeJS.infoToGridHtml = function (info, options) {
+    opt = {
+        labelSize: 4,
+        labelBold: true,
+        labelClasses: "",
+        rowClasses: "half-margin"
+    }
+
+    if (options) {
+        if (options.labelSize && options.labelSize <= 11)
+            opt.labelSize = options.labelSize;
+        if (options.labelBold != undefined && typeof options.labelBold == "boolean")
+            opt.labelBold = options.labelBold;
+        if (options.labelClasses != undefined && typeof options.labelClasses == "string")
+            opt.labelClasses = options.labelClasses;
+    }
+
+    var text = "";
+
+    var labelTag = "b";
+    var infoTag = "span";
+
+    if (!opt.labelBold) {
+        labelTag = "span";
+    }
+
+
+    topDom.$.each(info, function (i, o) {
+        //if(i > 0) text += "<br>";
+
+        text += "<div class='row " + opt.rowClasses + "'>";
+        text += "<div class='col s" + opt.labelSize + "'><" + labelTag + " class='" + opt.labelClasses + "'>" + o.label + "</" + labelTag + "></div>";
+        text += "<div class='col s" + (12 - opt.labelSize) + "'><" + infoTag + "'>" + o.info + "</" + infoTag + "></div>";
+        text += "</div>";
+    });
+
+    text += "</div>";
+
+    return text;
+}
+
 MaterializeJS.buttonHtml = function(info) {
 	if (!info)
 		info = {};
