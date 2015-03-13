@@ -39,7 +39,7 @@ MaterializeJS.infoToGridHtml = function (info, options) {
     }
 
 
-    topDom.$.each(info, function (i, o) {
+    $.each(info, function (i, o) {
         //if(i > 0) text += "<br>";
 
         text += "<div class='row " + opt.rowClasses + "'>";
