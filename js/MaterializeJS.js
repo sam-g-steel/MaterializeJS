@@ -1,4 +1,3 @@
-
 function _emptyStringIfNull(obj) {
 	try {
 		return obj ? obj : "";
@@ -10,7 +9,6 @@ function _emptyStringIfNull(obj) {
 }
 
 var MaterializeJS = {};
-
 
 MaterializeJS.buttonHtml = function(info) {
 	if (!info)
@@ -45,78 +43,74 @@ MaterializeJS.revealCardHtml = function(id, title, image, info) {
 	return res;
 };
 
+MaterializeJS.makeCardDraggable = function(element) {
 
-MaterializeJS.makeCardDraggable = function (element){
-  
-  var mc = new Hammer.Manager(element);
+	var mc = new Hammer.Manager(element);
 
-  mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
-  mc.add(new Hammer.Swipe()).recognizeWith(mc.get('pan'));
-  
-  mc.on("panstart panmove", MaterializeJS.onCardDrag);
-  mc.on("panend", MaterializeJS.onCardDragEnd);
+	mc.add(new Hammer.Pan({
+		threshold : 0,
+		pointers : 0
+	}));
+	mc.add(new Hammer.Swipe()).recognizeWith(mc.get('pan'));
+
+	mc.on("panstart panmove", MaterializeJS.onCardDrag);
+	mc.on("panend", MaterializeJS.onCardDragEnd);
 }
 
-MaterializeJS.makeCardsDraggable = function (selector){
-  
-  $.each( $(selector), function( i, o ) {
-    MaterializeJS.makeCardDraggable(o);
-  });
-}
+MaterializeJS.makeCardsDraggable = function(selector) {
 
+	$.each($(selector), function(i, o) {
+		MaterializeJS.makeCardDraggable(o);
+	});
+}
 // listen to events...
-MaterializeJS.onCardDrag = function (ev) {
-   // Get the events target element
-  var elem = ev.target;
-   
-   // Make sure we work on the card instead of one of its childern
-   if(!$(elem).hasClass(".card-panel")){
-     elem = $(elem).closest(".card-panel")[0];
-   }
-  
-  $(elem).setTranslate2D(ev.deltaX, ev.deltaY);
-  var pos = $(elem)[0].getBoundingClientRect();
-  $("#posSpan").text("X: " + pos.left + " Y: " + pos.top);
+MaterializeJS.onCardDrag = function(ev) {
+	// Get the events target element
+	var elem = ev.target;
+
+	// Make sure we work on the card instead of one of its childern
+	if (!$(elem).hasClass(".card-panel")) {
+		elem = $(elem).closest(".card-panel")[0];
+	}
+
+	$(elem).setTranslate2D(ev.deltaX, ev.deltaY);
+	var pos = $(elem)[0].getBoundingClientRect();
+	$("#posSpan").text("X: " + pos.left + " Y: " + pos.top);
 }
 
-MaterializeJS.onCardDragEnd = function (ev) {
-  $("#posSpan").text("");
-  
-   // Get the events target element
-  var elem = ev.target;
-   
-   // Make sure we work on the card instead of one of its childern
-   if(!$(elem).hasClass(".card-panel")){
-     elem = $(elem).closest(".card-panel")[0];
-   }
-  
-  $(elem).velocity(
-    {
-      translateX: ev.deltaX,
-      translateY: ev.deltaY
-    },
-    1).velocity(
-    {
-      translateX: 0,
-      translateY: 0
-    }, 500);
-  
-}
+MaterializeJS.onCardDragEnd = function(ev) {
+	$("#posSpan").text("");
 
+	// Get the events target element
+	var elem = ev.target;
+
+	// Make sure we work on the card instead of one of its childern
+	if (!$(elem).hasClass(".card-panel")) {
+		elem = $(elem).closest(".card-panel")[0];
+	}
+
+	$(elem).velocity({
+		translateX : ev.deltaX,
+		translateY : ev.deltaY
+	}, 1).velocity({
+		translateX : 0,
+		translateY : 0
+	}, 500);
+
+}
 ///////////////////////////////////////////////////////////////////
 // jQuery Plugins /////////////////////////////////////////////////
 
-
 jQuery.fn.makeCardsDraggable = function(info) {
-	$.each( this, function( i, o ) {
-    MaterializeJS.makeCardDraggable(o);
-  });
+	$.each(this, function(i, o) {
+		MaterializeJS.makeCardDraggable(o);
+	});
 };
 
 jQuery.fn.addButton = function(info) {
 	// It's your element
 	var o = $(this[0]);
-	
+
 	newElement = $($.parseHTML(MaterializeJS.buttonHtml(info)));
 	newElement.addClass("btn");
 	newElement.addClass(_emptyStringIfNull(info.classes));
@@ -153,3 +147,95 @@ jQuery.fn.setTranslate2D = function(x, y) {
 	el.style.transform = value;
 	ticking = false;
 };
+
+jQuery.fn.MaterializeJS_Data = function(info) {
+	// Get the jQuery element
+	var o = $(this[0]);
+
+	// If the uesr passes data commit it to the element
+	if (info) {
+		o.data("MaterializeJS", info);
+	}
+
+	// Otherwise return the data from the element to the user
+	else {
+		var data = o.data("MaterializeJS");
+		return data ? data : {};
+	}
+}
+
+jQuery.fn.openNewDialogue = function(info) {
+	// Get the jQuery element
+	var o = $(this[0]);
+
+	// Create div for the dialogue
+	var newElement = $("<div style='position: absolute; z-index: 100;' onclick='$(this).closeDialogue()'></div>");
+
+	// Add styling to the div
+	newElement.addClass("card-panel z-depth-3");
+	newElement.height(info.fillTarget.height());
+	newElement.width(info.fillTarget.width());
+	newElement.css("background-color", o.css("background-color"));
+	newElement.css("border-radius", "500px");
+	newElement.css("opacity", "0");
+	newElement.css("margin", "0px");
+	newElement.css("top", (o.offset().top + o.height() * 0.5 - newElement.height() * 0.5) + "px");
+	newElement.css("left", (o.offset().left + o.width() * 0.5 - newElement.width() * 0.5) + "px");
+
+	newElement.velocity({
+		"scale" : "0"
+	}, 0);
+	//newElement.velocity("finish");
+
+	// Get MaterializeJS Data for the fill target
+	var fData = info.fillTarget.MaterializeJS_Data();
+	//debugger
+	if (fData.currentDialogue) {
+		fData.currentDialogue.closeDialogue();
+	}
+
+	// Add new div to the DOM
+	$("body").append(newElement);
+
+	// Set MaterializeJS Data for the fill target
+	fData.currentDialogue = newElement;
+	info.fillTarget.MaterializeJS_Data(fData);
+
+	//
+	var mData = newElement.MaterializeJS_Data();
+	mData.origonalOffset = newElement.offset();
+	newElement.MaterializeJS_Data(mData);
+
+	newElement.velocity({
+		top : info.fillTarget.offset().top + "px",
+		left : info.fillTarget.offset().left + "px",
+		opacity : 2,
+		scale : 1,
+		borderRadius : "3"
+	}, 300);
+};
+
+jQuery.fn.closeDialogue = function(info) {
+	// It's your element
+	var o = $(this[0]);
+
+	var mData = o.MaterializeJS_Data();
+	var returnOffset = mData.origonalOffset;
+
+	o.velocity({
+		scale : "0",
+		top : returnOffset.top + "px",
+		left : returnOffset.left + "px",
+		borderRadius : "500",
+	}, 300, function() {
+		// Get MaterializeJS Data for the fill target
+		var fData = info.fillTarget.MaterializeJS_Data();
+
+		if (fData.currentDialogue == o) {
+			fData.currentDialogue = null;
+			// Set MaterializeJS Data for the fill target
+			info.fillTarget.MaterializeJS_Data(fData);
+		}
+		o.remove();
+	});
+}; 
