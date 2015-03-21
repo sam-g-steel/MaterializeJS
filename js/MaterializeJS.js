@@ -213,11 +213,11 @@ jQuery.fn.openNewDialogue = function(info) {
 	var newElement = $("<div style='position: absolute; z-index: 100;' onclick='$(this).closeDialogue()'></div>");
 
 	// Add styling to the div
-	newElement.addClass("card-panel z-depth-3");
+	// newElement.addClass("card-panel z-depth-3");
 	newElement.height(info.fillTarget.height());
 	newElement.width(info.fillTarget.width());
 	newElement.css("background-color", o.css("background-color"));
-	newElement.css("border-radius", "500px");
+	//newElement.css("border-radius", "500px");
 	newElement.css("opacity", "0");
 	newElement.css("margin", "0px");
 	newElement.css("top", (o.offset().top + o.height() * 0.5 - newElement.height() * 0.5) + "px");
@@ -252,8 +252,10 @@ jQuery.fn.openNewDialogue = function(info) {
 		left : info.fillTarget.offset().left + "px",
 		opacity : 2,
 		scale : 1,
-		borderRadius : "3"
-	}, 300);
+		//borderRadius : "3"
+	}, 300, function(){
+     newElement.addClass("card-panel z-depth-3");
+  });
 };
 
 jQuery.fn.closeDialogue = function(info) {
@@ -263,11 +265,13 @@ jQuery.fn.closeDialogue = function(info) {
 	var mData = o.MaterializeJS_Data();
 	var returnOffset = mData.origonalOffset;
 
+  o.removeClass("card-panel z-depth-3");
+  
 	o.velocity({
 		scale : "0",
 		top : returnOffset.top + "px",
 		left : returnOffset.left + "px",
-		borderRadius : "500",
+		//borderRadius : "500",
 	}, 300, function() {
 		// Get MaterializeJS Data for the fill target
 		var fData = info.fillTarget.MaterializeJS_Data();
@@ -279,4 +283,4 @@ jQuery.fn.closeDialogue = function(info) {
 		}
 		o.remove();
 	});
-}; 
+};
