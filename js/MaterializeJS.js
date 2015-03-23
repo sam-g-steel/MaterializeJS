@@ -237,6 +237,9 @@ jQuery.fn.openNewDialogue = function(info) {
 
 	// Add new div to the DOM
 	$("body").append(newElement);
+  if(info.onStart && typeof info.onStart == "function"){
+    info.onStart(newElement);
+  }
 
 	// Set MaterializeJS Data for the fill target
 	fData.currentDialogue = newElement;
