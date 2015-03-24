@@ -1,3 +1,13 @@
+MJS = {};
+
+MJS.fakeGuid = function() {
+	function s4() {
+		return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+	}
+
+	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
 function _emptyStringIfNull(obj) {
 	try {
 		return obj ? obj : "";
@@ -8,50 +18,47 @@ function _emptyStringIfNull(obj) {
 	return "";
 }
 
-var MaterializeJS = {};
+MJS.infoToGridHtml = function(info, options) {
+	opt = {
+		labelSize : 4,
+		labelBold : true,
+		labelClasses : "",
+		rowClasses : "half-margin"
+	}
 
-MaterializeJS.infoToGridHtml = function (info, options) {
-    opt = {
-        labelSize: 4,
-        labelBold: true,
-        labelClasses: "",
-        rowClasses: "half-margin"
-    }
+	if (options) {
+		if (options.labelSize && options.labelSize <= 11)
+			opt.labelSize = options.labelSize;
+		if (options.labelBold != undefined && typeof options.labelBold == "boolean")
+			opt.labelBold = options.labelBold;
+		if (options.labelClasses != undefined && typeof options.labelClasses == "string")
+			opt.labelClasses = options.labelClasses;
+	}
 
-    if (options) {
-        if (options.labelSize && options.labelSize <= 11)
-            opt.labelSize = options.labelSize;
-        if (options.labelBold != undefined && typeof options.labelBold == "boolean")
-            opt.labelBold = options.labelBold;
-        if (options.labelClasses != undefined && typeof options.labelClasses == "string")
-            opt.labelClasses = options.labelClasses;
-    }
+	var text = "";
 
-    var text = "";
+	var labelTag = "b";
+	var infoTag = "span";
 
-    var labelTag = "b";
-    var infoTag = "span";
+	if (!opt.labelBold) {
+		labelTag = "span";
+	}
 
-    if (!opt.labelBold) {
-        labelTag = "span";
-    }
+	$.each(info, function(i, o) {
+		//if(i > 0) text += "<br>";
 
+		text += "<div class='row " + opt.rowClasses + "'>";
+		text += "<div class='col s" + opt.labelSize + "'><" + labelTag + " class='" + opt.labelClasses + "'>" + o.label + "</" + labelTag + "></div>";
+		text += "<div class='col s" + (12 - opt.labelSize) + "'><" + infoTag + "'>" + o.info + "</" + infoTag + "></div>";
+		text += "</div>";
+	});
 
-    $.each(info, function (i, o) {
-        //if(i > 0) text += "<br>";
+	text += "</div>";
 
-        text += "<div class='row " + opt.rowClasses + "'>";
-        text += "<div class='col s" + opt.labelSize + "'><" + labelTag + " class='" + opt.labelClasses + "'>" + o.label + "</" + labelTag + "></div>";
-        text += "<div class='col s" + (12 - opt.labelSize) + "'><" + infoTag + "'>" + o.info + "</" + infoTag + "></div>";
-        text += "</div>";
-    });
-
-    text += "</div>";
-
-    return text;
+	return text;
 }
 
-MaterializeJS.buttonHtml = function(info) {
+MJS.buttonHtml = function(info) {
 	if (!info)
 		info = {};
 	if ( typeof info != "object") {
@@ -62,7 +69,7 @@ MaterializeJS.buttonHtml = function(info) {
 	return res;
 };
 
-MaterializeJS.imageCardHtml = function(info) {
+MJS.imageCardHtml = function(info) {
 	var res = "<div id='" + info.id + "' class='card blue-grey lighten-5 animated fadeInUp waves-effect waves-block waves-light'>\n" + "    <div class='card-image'>\n" + (info.image ? "        <img src='" + info.image + "'><hr style='margin: 0;'>\n" : "") + "    </div>\n" + "    <div class='card-content'>\n" + "        <span class='" + info.classes + "'>" + info.title + "</span>\n" + "        <p>" + info.text + "</p>\n" + "    </div>\n" +
 	//"    <div class='card-action'>\n" +
 	//"        <a href='#'>This is a link</a>\n" +
@@ -72,19 +79,19 @@ MaterializeJS.imageCardHtml = function(info) {
 	return res;
 };
 
-MaterializeJS.plainPanelCardHtml = function(info) {
+MJS.plainPanelCardHtml = function(info) {
 	var res = "<div class='card-panel'>" + "<span class=" + _emptyStringIfNull(info.span_classes) + ">" + _emptyStringIfNull(info.text) + " </span>" + "</div>" + "</div>";
 	return res;
 };
 
-MaterializeJS.revealCardHtml = function(id, title, image, info) {
+MJS.revealCardHtml = function(id, title, image, info) {
 	var res = "<div id='" + id + "' class='card animated fadeInUp'>" + "<div class='card-image waves-effect waves-block waves-light'>" + ( image ? "<img class='activator' src='" + image + "'>" : "" ) + "</div>" + "<div class='card-content'>" + "<span class='card-title activator grey-text text-darken-4'>" + title + "<i class='mdi-navigation-more-vert right'></i>" + "</span>" +
 	//"<p><a href='#'>This is a link</a></p>" +
 	"</div>" + "<div class='card-reveal'>" + "<span class='card-title grey-text text-darken-4'>" + title + "<i class='mdi-navigation-close right'></i></span>" + "<p>" + info + "</p>" + "</div>" + "</div>";
 	return res;
 };
 
-MaterializeJS.makeCardDraggable = function(element) {
+MJS.makeCardDraggable = function(element) {
 
 	var mc = new Hammer.Manager(element);
 
@@ -98,14 +105,14 @@ MaterializeJS.makeCardDraggable = function(element) {
 	mc.on("panend", MaterializeJS.onCardDragEnd);
 }
 
-MaterializeJS.makeCardsDraggable = function(selector) {
+MJS.makeCardsDraggable = function(selector) {
 
 	$.each($(selector), function(i, o) {
 		MaterializeJS.makeCardDraggable(o);
 	});
 }
 // listen to events...
-MaterializeJS.onCardDrag = function(ev) {
+MJS.onCardDrag = function(ev) {
 	// Get the events target element
 	var elem = ev.target;
 
@@ -119,7 +126,7 @@ MaterializeJS.onCardDrag = function(ev) {
 	$("#posSpan").text("X: " + pos.left + " Y: " + pos.top);
 }
 
-MaterializeJS.onCardDragEnd = function(ev) {
+MJS.onCardDragEnd = function(ev) {
 	$("#posSpan").text("");
 
 	// Get the events target element
@@ -139,6 +146,68 @@ MaterializeJS.onCardDragEnd = function(ev) {
 	}, 500);
 
 }
+
+
+///////////////////////////////////////////////////////////////////
+// MJS List Class /////////////////////////////////////////////////
+
+MJS.list = function() {
+	this.items = [];
+};
+
+// Todo add select events, List Lable, and ID options
+
+MJS.list.prototype.selectItemByText = function(text) {
+	this.listElement.children().filter(function() {
+		return $(this).text() == text
+	}).click();
+}
+
+MJS.list.prototype.getSelectText = function(list) {
+	return $(list).children(".active").text();
+}
+
+MJS.list.prototype.infoToList = function(info, options) {
+	opt = {
+		ID : "MJS_list" + MJS.fakeGuid(),
+		onSelect : null,
+		selectedClasses : "grey white-text",
+		itemClasses : "white grey-text text-darken-2"
+	}
+
+	if (options) {
+		if (options.selectedClasses != undefined && typeof options.selectedClasses == "string")
+			opt.selectedClasses = options.selectedClasses;
+		if (options.itemClasses != undefined && typeof options.itemClasses == "string")
+			opt.itemClasses = options.itemClasses;
+	}
+
+	// Create list element
+	var listElement = $("<div class='collection with-header'></div>");
+
+	$.each(info.items, function(i, o) {
+		var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o.text + "</a>");
+		itemElement.click(function() {
+			var o = $(this);
+
+			//
+			o.siblings().removeClass("active");
+			o.siblings().removeClass(opt.selectedClasses);
+			o.siblings().addClass(opt.itemClasses);
+
+			//
+			o.removeClass(opt.itemClasses);
+			o.addClass("active");
+			o.addClass(opt.selectedClasses);
+
+		});
+		listElement.append(itemElement);
+	});
+
+	this.listElement = listElement;
+	return listElement;
+}
+
 ///////////////////////////////////////////////////////////////////
 // jQuery Plugins /////////////////////////////////////////////////
 
@@ -237,9 +306,9 @@ jQuery.fn.openNewDialogue = function(info) {
 
 	// Add new div to the DOM
 	$("body").append(newElement);
-  if(info.onStart && typeof info.onStart == "function"){
-    info.onStart(newElement);
-  }
+	if (info.onStart && typeof info.onStart == "function") {
+		info.onStart(newElement);
+	}
 
 	// Set MaterializeJS Data for the fill target
 	fData.currentDialogue = newElement;
@@ -256,9 +325,9 @@ jQuery.fn.openNewDialogue = function(info) {
 		opacity : 2,
 		scale : 1,
 		//borderRadius : "3"
-	}, 300, function(){
-     newElement.addClass("card-panel z-depth-3");
-  });
+	}, 300, function() {
+		newElement.addClass("card-panel z-depth-3");
+	});
 };
 
 jQuery.fn.closeDialogue = function(info) {
@@ -268,8 +337,8 @@ jQuery.fn.closeDialogue = function(info) {
 	var mData = o.MaterializeJS_Data();
 	var returnOffset = mData.origonalOffset;
 
-  o.removeClass("card-panel z-depth-3");
-  
+	o.removeClass("card-panel z-depth-3");
+
 	o.velocity({
 		scale : "0",
 		top : returnOffset.top + "px",
@@ -287,3 +356,5 @@ jQuery.fn.closeDialogue = function(info) {
 		o.remove();
 	});
 };
+
+MaterializeJS = MJS;
