@@ -334,8 +334,7 @@ jQuery.fn.openNewDialogue = function (info) {
         top: info.fillTarget.offset().top + "px",
         left: info.fillTarget.offset().left + "px",
         opacity: 2,
-        scale: 1,
-        //borderRadius : "3"
+        scale: 1
     }, 300, function () {
         newElement.addClass("card-panel z-depth-3");
     });
@@ -353,8 +352,7 @@ jQuery.fn.closeDialogue = function (info) {
     o.velocity({
         scale: "0",
         top: returnOffset.top + "px",
-        left: returnOffset.left + "px",
-        //borderRadius : "500",
+        left: returnOffset.left + "px"
     }, 300, function () {
         // Get MaterializeJS Data for the fill target
         var fData = info.fillTarget.MaterializeJS_Data();
