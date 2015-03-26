@@ -157,10 +157,16 @@ MJS.list = function () {
     this.onSelect = null;
 };
 
-// Todo add select events, List Label, and ID options
+// Todo List Label, and ID options
 
 MJS.list.prototype.getElement = function () {
     return this._element;
+};
+
+MJS.list.prototype.clearSelection = function (text) {
+    this._element.children().removeClass("active");
+    this._element.children().removeClass(opt.selectedClasses);
+    this._element.children().addClass(opt.itemClasses);
 };
 
 MJS.list.prototype.selectFirstItem = function (text) {
@@ -173,8 +179,8 @@ MJS.list.prototype.selectItemByText = function (text) {
     }).click();
 };
 
-MJS.list.prototype.getSelectText = function (list) {
-    return $(list).children(".active").text();
+MJS.list.prototype.getSelectedText = function () {
+    return this._element.children(".active").text();
 };
 
 MJS.list.prototype.infoToList = function (info, options) {
@@ -195,6 +201,8 @@ MJS.list.prototype.infoToList = function (info, options) {
     // Create list element
     var element = $("<div class='collection with-header'></div>");
 
+    var list = this;
+
     $.each(info.items, function (i, o) {
         var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o.text + "</a>");
         itemElement.click(function () {
@@ -210,12 +218,13 @@ MJS.list.prototype.infoToList = function (info, options) {
             o.addClass("active");
             o.addClass(opt.selectedClasses);
 
+            if (list.onSelect) list.onSelect();
         });
         element.append(itemElement);
     });
 
     this._element = element;
-    this.selectFirstItem();
+    this.clearSelection();
     return element;
 };
 
@@ -312,7 +321,7 @@ jQuery.fn.openNewDialogue = function (info) {
     var fData = info.fillTarget.MaterializeJS_Data();
     //debugger
     if (fData.currentDialogue) {
-        fData.currentDialogue.closeDialogue();
+        fData.currentDialogue.closeDialogue(info);
     }
 
     // Add new div to the DOM
@@ -349,20 +358,25 @@ jQuery.fn.closeDialogue = function (info) {
 
     o.removeClass("card-panel z-depth-3");
 
+    // Get MaterializeJS Data for the fill target
+    var fData = info.fillTarget.MaterializeJS_Data();
+
+    if (fData.currentDialogue == o) {
+        fData.currentDialogue = null;
+        // Set MaterializeJS Data for the fill target
+        info.fillTarget.MaterializeJS_Data(fData);
+    }
+
     o.velocity({
         scale: "0",
         top: returnOffset.top + "px",
         left: returnOffset.left + "px"
-    }, 300, function () {
-        // Get MaterializeJS Data for the fill target
-        var fData = info.fillTarget.MaterializeJS_Data();
-
-        if (fData.currentDialogue == o) {
-            fData.currentDialogue = null;
-            // Set MaterializeJS Data for the fill target
-            info.fillTarget.MaterializeJS_Data(fData);
+    }, {
+        duration: 300,
+        /* Log all the animated divs. */
+        complete: function () {
+            o.remove();
         }
-        o.remove();
     });
 };
 
