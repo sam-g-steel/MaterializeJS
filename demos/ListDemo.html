@@ -1,0 +1,41 @@
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+
+	<link href="http://materializecss.com/dist/css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection">
+
+	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script src="http://rawgit.com/sam-g-steel/MaterializeJS/master/libs/materialize/js/materialize.js"></script>
+	<script src="http://rawgit.com/sam-g-steel/MaterializeJS/master/js/MaterializeJS.js"></script>
+	<script src="http://julian.com/research/velocity/build/velocity.ui.js"></script>
+</head>
+
+<body>
+	<script>
+		var listInfo = {
+			items : [{
+				text : "Hopper",
+				value : "1"
+			}, {
+				text : "Scawl",
+				value : "2"
+			}, {
+				text : "Mechanical",
+				value : "3"
+			}, {
+				text : "Pipe Line",
+				value : "4"
+			}]
+		};
+
+		var list = new MJS.list();
+
+		$("body").append(list.infoToList(listInfo, {
+			itemClasses : " orange-text",
+			selectedClasses : "orange darken-2 white-text"
+		}));
+		list.selectItemByText("Hopper");
+
+		list.getElement().addClass("z-depth-1");
+
+	</script>
+</body>
