@@ -133,7 +133,7 @@ MJS.onCardDragEnd = function (ev) {
     // Get the events target element
     var elem = ev.target;
 
-    // Make sure we work on the card instead of one of its childern
+    // Make sure we work on the card instead of one of its children
     if (!$(elem).hasClass(".card-panel")) {
         elem = $(elem).closest(".card-panel")[0];
     }
@@ -153,11 +153,26 @@ MJS.onCardDragEnd = function (ev) {
 
 MJS.list = function () {
     this.items = [];
+    this.listIndex = 0;
+    this.multiList = false;
+    this.options = {
+        ID: "MJS_list" + MJS.fakeGuid(),
+        onSelect: null,
+        selectedClasses: "grey white-text",
+        itemClasses: "white grey-text text-darken-2"
+    };
     this._element = null;
     this.onSelect = null;
 };
 
 // Todo List Label, and ID options
+
+MJS.list.prototype.help = function () {
+    var text  = "items format: \"[{text, value}, ...]\" for a single list\n";
+        text += "items format: \"[{topic: \"\", items: [{text, value}, ...]}, ...]\" for a multi list";
+    console.log(text);
+    return text;
+};
 
 MJS.list.prototype.getElement = function () {
     return this._element;
@@ -165,8 +180,8 @@ MJS.list.prototype.getElement = function () {
 
 MJS.list.prototype.clearSelection = function (text) {
     this._element.children().removeClass("active");
-    this._element.children().removeClass(opt.selectedClasses);
-    this._element.children().addClass(opt.itemClasses);
+    this._element.children().removeClass(this.options.selectedClasses);
+    this._element.children().addClass(this.options.itemClasses);
 };
 
 MJS.list.prototype.selectFirstItem = function (text) {
@@ -183,49 +198,62 @@ MJS.list.prototype.getSelectedText = function () {
     return this._element.children(".active").text();
 };
 
-MJS.list.prototype.infoToList = function (info, options) {
-    opt = {
-        ID: "MJS_list" + MJS.fakeGuid(),
-        onSelect: null,
-        selectedClasses: "grey white-text",
-        itemClasses: "white grey-text text-darken-2"
-    }
-
-    if (options) {
-        if (options.selectedClasses != undefined && typeof options.selectedClasses == "string")
-            opt.selectedClasses = options.selectedClasses;
-        if (options.itemClasses != undefined && typeof options.itemClasses == "string")
-            opt.itemClasses = options.itemClasses;
-    }
-
-    // Create list element
-    var element = $("<div class='collection with-header'></div>");
-
+MJS.list.prototype.buildItems = function () {
     var list = this;
+    var items;
 
-    $.each(info.items, function (i, o) {
+    if (!this.multiList) {
+        items = this.items;
+    }
+    else {
+        items = this.items[this.listIndex].items;
+    }
+
+    $.each(items, function (i, o) {
         var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o.text + "</a>");
         itemElement.click(function () {
             var o = $(this);
 
             //
             o.siblings().removeClass("active");
-            o.siblings().removeClass(opt.selectedClasses);
-            o.siblings().addClass(opt.itemClasses);
+            o.siblings().removeClass(list.options.selectedClasses);
+            o.siblings().addClass(list.options.itemClasses);
 
             //
-            o.removeClass(opt.itemClasses);
+            o.removeClass(list.options.itemClasses);
             o.addClass("active");
-            o.addClass(opt.selectedClasses);
+            o.addClass(list.options.selectedClasses);
 
             if (list.onSelect) list.onSelect();
         });
-        element.append(itemElement);
+        list.getElement().append(itemElement);
     });
+};
 
-    this._element = element;
+MJS.list.prototype.infoToList = function (info, options) {
+    if (options) {
+        if (options.selectedClasses != undefined && typeof options.selectedClasses == "string")
+            this.options.selectedClasses = options.selectedClasses;
+        if (options.itemClasses != undefined && typeof options.itemClasses == "string")
+            this.options.itemClasses = options.itemClasses;
+    }
+
+    if (info.items) {
+        this.items = info.items;
+        this.multiList = false;
+    }
+    else if (info.length) {
+        this.items = info;
+        this.multiList = true;
+    }
+
+    // Create list element
+    this._element = $("<div class='collection with-header'></div>");
+
+    this.buildItems();
+
     this.clearSelection();
-    return element;
+    return this.getElement();
 };
 
 ///////////////////////////////////////////////////////////////////
