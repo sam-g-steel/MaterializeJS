@@ -12,7 +12,9 @@
 <body>
 	<script>
 	    // Create some data to feed to the list
-		var listInfo = {
+		var multilistInfo = [
+		{
+			topic: "Types",
 			items : [{
 				text : "Hopper",
 				value : "1"
@@ -26,13 +28,30 @@
 				text : "Pipe Line",
 				value : "4"
 			}]
-		};
+		},
+		{
+			topic: "Names",
+			items : [{
+				text : "Terrapin Island",
+				value : "1"
+			}, {
+				text : "Island 2",
+				value : "2"
+			}, {
+				text : "Mary H",
+				value : "3"
+			}, {
+				text : "Frankenstein",
+				value : "4"
+			}]
+		}
+		];
 
 		// Create a list object
 		var list = new MJS.list();
 		
 		// Bind some data to the list, also set some styling options
-		list.infoToList(listInfo, {
+		list.infoToList(multilistInfo, {
 			itemClasses : " orange-text",
 			selectedClasses : "orange darken-2 white-text"
 		});
