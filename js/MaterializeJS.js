@@ -198,6 +198,30 @@ MJS.list.prototype.getSelectedText = function () {
     return this._element.children(".active").text();
 };
 
+// collection-header
+MJS.list.prototype.buildHeader = function () {
+	if(!this.multiList) return;
+	
+	var list    = this;
+	var element = this.getElement();
+	var header  = element.children(".collection-header");
+	
+	if(!header.length){
+		header = $("<a href='#!' class='collection-header'></a>");
+		element.prepend(header);
+	}
+	
+	header.empty();
+	
+	$.each(this.items, function (i, o) {
+		if(i < list.listIndex){
+			header.append("<span>" + o.topic + "</span>");
+		}else if(i == list.listIndex){
+			header.append("<b>" + o.topic + "</b>");
+		}
+	});
+}
+
 MJS.list.prototype.buildItems = function () {
     var list = this;
     var items;
@@ -250,6 +274,7 @@ MJS.list.prototype.infoToList = function (info, options) {
     // Create list element
     this._element = $("<div class='collection with-header'></div>");
 
+    this.buildHeader();
     this.buildItems();
 
     this.clearSelection();
