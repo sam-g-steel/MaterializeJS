@@ -153,6 +153,8 @@ MJS.onCardDragEnd = function (ev) {
 
 MJS.list = function () {
     this.items = [];
+  	this.textField = "text";
+  	this.valueField = "value";
     this.listIndex = 0;
     this.multiList = false;
     this.options = {
@@ -198,6 +200,10 @@ MJS.list.prototype.getSelectedText = function () {
     return this._element.children(".active").text();
 };
 
+MJS.list.prototype.getSelectedValue = function () {
+    return this._element.children(".active").data().value;
+};
+
 // collection-header
 MJS.list.prototype.buildHeader = function () {
 	if(!this.multiList) return;
@@ -234,7 +240,8 @@ MJS.list.prototype.buildItems = function () {
     }
 
     $.each(items, function (i, o) {
-        var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o.text + "</a>");
+        var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o[list.textField] + "</a>");
+      	itemElement.data("value", o[list.valueField]);
         itemElement.click(function () {
             var o = $(this);
 
