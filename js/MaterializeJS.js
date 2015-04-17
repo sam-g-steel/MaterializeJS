@@ -153,8 +153,9 @@ MJS.onCardDragEnd = function (ev) {
 
 MJS.list = function () {
     this.items = [];
-  	this.textField = "text";
-  	this.valueField = "value";
+    this.selectionStack = []; // For multi-list
+    this.textField = "text";
+    this.valueField = "value";
     this.listIndex = 0;
     this.multiList = false;
     this.options = {
@@ -170,8 +171,8 @@ MJS.list = function () {
 // Todo List Label, and ID options
 
 MJS.list.prototype.help = function () {
-    var text  = "items format: \"[{text, value}, ...]\" for a single list\n";
-        text += "items format: \"[{topic: \"\", items: [{text, value}, ...]}, ...]\" for a multi list";
+    var text = "items format: \"[{text, value}, ...]\" for a single list\n";
+    text += "items format: \"[{topic: \"\", items: [{text, value}, ...]}, ...]\" for a multi list";
     console.log(text);
     return text;
 };
@@ -180,52 +181,86 @@ MJS.list.prototype.getElement = function () {
     return this._element;
 };
 
+MJS.list.prototype.getHeaderElement = function () {
+    return this.getElement().children(".header");
+};
+
+MJS.list.prototype.getItemsElement = function () {
+    return this._element.children(".collection");
+};
+
 MJS.list.prototype.clearSelection = function (text) {
-    this._element.children().removeClass("active");
-    this._element.children().removeClass(this.options.selectedClasses);
-    this._element.children().addClass(this.options.itemClasses);
+    this.getItemsElement().children().removeClass("active");
+    this.getItemsElement().children().removeClass(this.options.selectedClasses);
+    this.getItemsElement().children().addClass(this.options.itemClasses);
 };
 
 MJS.list.prototype.selectFirstItem = function (text) {
-    this._element.children().first().click();
+    this.getItemsElement().children().first().click();
 };
 
 MJS.list.prototype.selectItemByText = function (text) {
-    this._element.children().filter(function () {
+    this.getItemsElement().children().filter(function () {
         return $(this).text() == text
     }).click();
 };
 
+MJS.list.prototype.getSelectedElement = function () {
+    return this.getItemsElement().children(".active");
+};
+
 MJS.list.prototype.getSelectedText = function () {
-    return this._element.children(".active").text();
+    return this.getSelectedElement().text();
 };
 
 MJS.list.prototype.getSelectedValue = function () {
-    return this._element.children(".active").data().value;
+    return this.getSelectedElement().data().value;
 };
 
 // collection-header
 MJS.list.prototype.buildHeader = function () {
-	if(!this.multiList) return;
-	
-	var list    = this;
-	var element = this.getElement();
-	var header  = element.children(".collection-header");
-	
-	if(!header.length){
-		header = $("<a href='#!' class='collection-header'></a>");
-		element.prepend(header);
-	}
-	
-	header.empty();
-	
-	$.each(this.items, function (i, o) {
-		if(i < list.listIndex){
-			header.append("<span>" + o.topic + "</span>");
-		}else if(i == list.listIndex){
-			header.append("<b>" + o.topic + "</b>");
-		}
-	});
+    if (!this.multiList) return;
+
+    var list = this;
+    var element = this.getElement();
+    var header = this.getHeaderElement();
+
+    if (!header.length) {
+        header = $("<a href='#!' class='collection-header'></a>");
+        element.prepend(header);
+    }
+
+    header.empty();
+
+    $.each(this.items, function (i, o) {
+        if (i < list.listIndex) {
+            var element = $("<a class='grey-text text-darken-2' href='#'>" + list.selectionStack[i].text() + "</a>");
+            element.click(function () {
+                var list  = $(this).parent().parent().data().MJS_Source;
+                var index = $(this).parent().children().index(this);
+
+                list.listIndex = index;
+                list.selectionStack.splice(index, Number.MAX_VALUE);
+
+                list.getItemsElement().velocity("transition.fadeOut", {
+                    stagger: 100,
+                    duration: 300,
+                    complete: function () {
+                        list.buildItems();
+                        list.buildHeader();
+                        list.getItemsElement().velocity("transition.fadeIn", {
+                            stagger: 100,
+                            duration: 300
+                        });
+                    }
+                });
+            });
+            header.append(element);
+            header.append(" / ");
+        } else if (i == list.listIndex) {
+            header.append("<b>" + o.topic + "</b>");
+        }
+    });
 }
 
 MJS.list.prototype.buildItems = function () {
@@ -239,11 +274,15 @@ MJS.list.prototype.buildItems = function () {
         items = this.items[this.listIndex].items;
     }
 
+    // Remove any old items
+    list.getItemsElement().empty();
+
     $.each(items, function (i, o) {
         var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o[list.textField] + "</a>");
-      	itemElement.data("value", o[list.valueField]);
+        itemElement.data("value", o[list.valueField]);
         itemElement.click(function () {
             var o = $(this);
+            var list = o.parent().parent().data().MJS_Source;
 
             //
             o.siblings().removeClass("active");
@@ -256,9 +295,32 @@ MJS.list.prototype.buildItems = function () {
             o.addClass(list.options.selectedClasses);
 
             if (list.onSelect) list.onSelect();
+
+
+            //toast(list.getSelectedText(), 5000);
+
+            if (list.multiList && 1 + list.listIndex < list.items.length) {
+                list.selectionStack.push(list.getSelectedElement());
+
+                list.listIndex++;
+
+                list.getItemsElement().velocity("transition.fadeOut", {
+                    stagger: 100,
+                    duration: 300,
+                    complete: function () {
+                        list.buildItems();
+                        list.buildHeader();
+                        list.getItemsElement().velocity("transition.fadeIn", {
+                            stagger: 100,
+                            duration: 300
+                        });
+                    }
+                });
+            }
         });
-        list.getElement().append(itemElement);
+        list.getItemsElement().append(itemElement);
     });
+    list.clearSelection();
 };
 
 MJS.list.prototype.infoToList = function (info, options) {
@@ -279,7 +341,8 @@ MJS.list.prototype.infoToList = function (info, options) {
     }
 
     // Create list element
-    this._element = $("<div class='collection with-header'></div>");
+    this._element = $("<div><div class='header'></div><div class='collection with-header'></div></div>");
+    this._element.data("MJS_Source", this);
 
     this.buildHeader();
     this.buildItems();
