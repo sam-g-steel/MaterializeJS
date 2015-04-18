@@ -18,6 +18,10 @@ function _emptyStringIfNull(obj) {
     return "";
 }
 
+MJS.circularPreloaderHtml = function () {
+    return '<div class="preloader-wrapper active"><div class="spinner-layer spinner-red-only"><div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div></div></div>';
+};
+
 MJS.infoToGridHtml = function (info, options) {
     opt = {
         labelSize: 4,
@@ -157,6 +161,8 @@ MJS.list = function () {
     this.textField = "text";
     this.valueField = "value";
     this.listIndex = 0;
+    this.newListIndex = 0;
+    this.loading = false;
     this.multiList = false;
     this.options = {
         ID: "MJS_list" + MJS.fakeGuid(),
@@ -217,6 +223,34 @@ MJS.list.prototype.getSelectedValue = function () {
     return this.getSelectedElement().data().value;
 };
 
+// Todo: add index parameter
+MJS.list.prototype.setItemsData = function (data) {
+    if (this.multiList) {
+        this.items[this.listIndex].items = data;
+    } else {
+        this.items = data;
+    }
+};
+
+// collection-header
+MJS.list.prototype.refreshElements = function () {
+    var list = this;
+    list.getItemsElement().velocity("stop", true);
+    list.getItemsElement().velocity("transition.fadeOut", {
+        stagger: 100,
+        duration: 300,
+        complete: function () {
+            list.buildItems();
+            list.buildHeader();
+            list.getItemsElement().velocity("transition.fadeIn", {
+                stagger: 100,
+                duration: 300
+            });
+        }
+    });
+
+}
+
 // collection-header
 MJS.list.prototype.buildHeader = function () {
     if (!this.multiList) return;
@@ -236,24 +270,16 @@ MJS.list.prototype.buildHeader = function () {
         if (i < list.listIndex) {
             var element = $("<a class='grey-text text-darken-2' href='#'>" + list.selectionStack[i].text() + "</a>");
             element.click(function () {
-                var list  = $(this).parent().parent().data().MJS_Source;
+                var list = $(this).parent().parent().data().MJS_Source;
                 var index = $(this).parent().children().index(this);
 
                 list.listIndex = index;
+                list.newListIndex = list.listIndex;
                 list.selectionStack.splice(index, Number.MAX_VALUE);
 
-                list.getItemsElement().velocity("transition.fadeOut", {
-                    stagger: 100,
-                    duration: 300,
-                    complete: function () {
-                        list.buildItems();
-                        list.buildHeader();
-                        list.getItemsElement().velocity("transition.fadeIn", {
-                            stagger: 100,
-                            duration: 300
-                        });
-                    }
-                });
+                if (list.onSelect) list.onSelect();
+
+                list.refreshElements();
             });
             header.append(element);
             header.append(" / ");
@@ -267,15 +293,27 @@ MJS.list.prototype.buildItems = function () {
     var list = this;
     var items;
 
+    // Remove any old items
+    list.getItemsElement().empty();
+
+    // If loading 
+    if (this.loading) {
+        list.getItemsElement().append(
+            '<div class="col s12 center" style="padding: .5em;" >' +
+            MJS.circularPreloaderHtml() +
+            '</div>'
+        );
+        return;
+    }
+
     if (!this.multiList) {
         items = this.items;
     }
     else {
         items = this.items[this.listIndex].items;
+        if (this.items[this.listIndex].textField)  this.textField  = this.items[this.listIndex].textField;
+        if (this.items[this.listIndex].valueField) this.valueField = this.items[this.listIndex].valueField;
     }
-
-    // Remove any old items
-    list.getItemsElement().empty();
 
     $.each(items, function (i, o) {
         var itemElement = $("<a href='#!' class='collection-item waves-effect'>" + o[list.textField] + "</a>");
@@ -294,28 +332,16 @@ MJS.list.prototype.buildItems = function () {
             o.addClass("active");
             o.addClass(list.options.selectedClasses);
 
+            list.newListIndex = list.listIndex + 1;
+
             if (list.onSelect) list.onSelect();
-
-
-            //toast(list.getSelectedText(), 5000);
 
             if (list.multiList && 1 + list.listIndex < list.items.length) {
                 list.selectionStack.push(list.getSelectedElement());
 
                 list.listIndex++;
 
-                list.getItemsElement().velocity("transition.fadeOut", {
-                    stagger: 100,
-                    duration: 300,
-                    complete: function () {
-                        list.buildItems();
-                        list.buildHeader();
-                        list.getItemsElement().velocity("transition.fadeIn", {
-                            stagger: 100,
-                            duration: 300
-                        });
-                    }
-                });
+                list.refreshElements();
             }
         });
         list.getItemsElement().append(itemElement);
