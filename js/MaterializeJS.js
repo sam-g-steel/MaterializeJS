@@ -3,15 +3,19 @@ var MJS = {};
 MJS.Toast = {};
 
 MJS.Toast.E = function (text) {
-    Materialize.toast("<b class='red-text'>Error:</b>&nbsp;" + text, 3500);
+    Materialize.toast("<b class='red-text'>Error:</b>&nbsp;" + text, 4500);
 };
 
-MJS.Toast.W = function (text) {
-    Materialize.toast("<b class='yellow-text text-darken-1'>Warning:</b>&nbsp;" + text, 3500);
+MJS.Toast.L = function (text) {
+    Materialize.toast("<b class='blue-text'>Log:</b>&nbsp;" + text, 2500);
 };
 
 MJS.Toast.S = function (text) {
     Materialize.toast("<b class='green-text'>Sucess:</b>&nbsp;" + text, 2500);
+};
+
+MJS.Toast.W = function (text) {
+    Materialize.toast("<b class='yellow-text text-darken-3'>Warning:</b>&nbsp;" + text, 3500);
 };
 
 MJS.fakeGuid = function () {
@@ -45,7 +49,7 @@ MJS.infoToGridHtml = function (info, options) {
     };
 
     if (options) {
-        if (options.labelSize && options.labelSize <= 11)
+        if (options.labelSize && options.labelSize <= 12)
             opt.labelSize = options.labelSize;
         if (options.labelBold != undefined && typeof options.labelBold == "boolean")
             opt.labelBold = options.labelBold;
@@ -63,11 +67,11 @@ MJS.infoToGridHtml = function (info, options) {
     }
 
     $.each(info, function (i, o) {
-        //if(i > 0) text += "<br>";
+        infosize = opt.labelSize < 12 ? (12 - opt.labelSize) : 12;
 
         text += "<div class='row " + opt.rowClasses + "'>";
         text += "<div class='col s" + opt.labelSize + "'><" + labelTag + " class='" + opt.labelClasses + "'>" + o.label + "</" + labelTag + "></div>";
-        text += "<div class='col s" + (12 - opt.labelSize) + "'><" + infoTag + "'>" + o.info + "</" + infoTag + "></div>";
+        text += "<div class='col s" + infosize + "'><" + infoTag + "'>" + o.info + "</" + infoTag + "></div>";
         text += "</div>";
     });
 
@@ -182,10 +186,12 @@ MJS.list = function () {
         ID: "MJS_list" + MJS.fakeGuid(),
         onSelect: null,
         selectedClasses: "grey white-text",
-        itemClasses: "white grey-text text-darken-2"
+        itemClasses: "white grey-text text-darken-2",
+        selectedHeaderClasses: "grey-text text-darken-2"
     };
-    this._element = null;
-    this.onSelect = null;
+    this._element  = null;
+    this.onSelect  = null;
+    this.onRefreshData = null;
 };
 
 // Todo List Label, and ID options
@@ -260,6 +266,7 @@ MJS.list.prototype.refreshElements = function () {
         stagger: 100,
         duration: 300,
         complete: function () {
+            list.loading = false;
             list.buildItems();
             list.buildHeader();
             list.getItemsElement().velocity("transition.fadeIn", {
@@ -288,16 +295,15 @@ MJS.list.prototype.buildHeader = function () {
 
     $.each(this.items, function (i, o) {
         if (i < list.listIndex) {
-            var element = $("<a class='grey-text text-darken-2' href='#'>" + list.selectionStack[i].text() + "</a>");
+            var element = $("<a class='" + list.options.selectedHeaderClasses + "' href='#'>" + list.selectionStack[i].text() + "</a>");
             element.click(function () {
                 var list = $(this).parent().parent().data().MJS_Source;
                 var index = $(this).parent().children().index(this);
 
-                list.listIndex = index;
-                list.newListIndex = list.listIndex;
+                list.newListIndex = index;
                 list.selectionStack.splice(index, Number.MAX_VALUE);
-
-                if (list.onSelect) list.onSelect();
+                if (list.onSelect) list.onSelect()
+                list.listIndex = index;
 
                 list.refreshElements();
             });
@@ -342,6 +348,11 @@ MJS.list.prototype.buildItems = function () {
             var o = $(this);
             var list = o.parent().parent().data().MJS_Source;
 
+            // if list is loading ignore clicks
+            if(list.loading){
+                return;
+            }
+
             //
             o.siblings().removeClass("active");
             o.siblings().removeClass(list.options.selectedClasses);
@@ -352,14 +363,18 @@ MJS.list.prototype.buildItems = function () {
             o.addClass("active");
             o.addClass(list.options.selectedClasses);
 
-            list.newListIndex = list.listIndex + 1;
+            if (list.multiList && list.listIndex < list.items.length-1) {
+                list.newListIndex = list.listIndex + 1;
+                list.loading = true;
+            }
 
+            // If there is an on select callback, call it!
             if (list.onSelect) list.onSelect();
 
-            if (list.multiList && 1 + list.listIndex < list.items.length) {
+            if (list.multiList && list.newListIndex != list.listIndex) {
                 list.selectionStack.push(list.getSelectedElement());
 
-                list.listIndex++;
+                list.listIndex = list.newListIndex;
 
                 list.refreshElements();
             }
@@ -375,6 +390,8 @@ MJS.list.prototype.infoToList = function (info, options) {
             this.options.selectedClasses = options.selectedClasses;
         if (options.itemClasses != undefined && typeof options.itemClasses == "string")
             this.options.itemClasses = options.itemClasses;
+        if (options.selectedHeaderClasses != undefined && typeof options.selectedHeaderClasses == "string")
+            this.options.selectedHeaderClasses = options.selectedHeaderClasses;
     }
 
     if (info.items) {
@@ -387,7 +404,7 @@ MJS.list.prototype.infoToList = function (info, options) {
     }
 
     // Create list element
-    this._element = $("<div class='MJS_List'><div class='header'></div><div class='collection with-header' style='border: none; overflow: auto;'></div></div>");
+    this._element = $("<div class='MJS_List'><div class='header'></div><div class='collection with-header grey darken-2' style='border: none; overflow: auto;'></div></div>");
     this._element.data("MJS_Source", this);
 
     this.buildHeader();
@@ -530,7 +547,7 @@ jQuery.fn.closeDialogue = function (info) {
     // Get MaterializeJS Data for the fill target
     var fData = info.fillTarget.MaterializeJS_Data();
 
-    if (fData.currentDialogue == o) {
+    if (fData.currentDialogue[0] == o[0]) {
         fData.currentDialogue = null;
         // Set MaterializeJS Data for the fill target
         info.fillTarget.MaterializeJS_Data(fData);
